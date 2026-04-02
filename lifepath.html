@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>LifePath</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow:hidden;transition:background .5s}
+.screen{display:none;flex-direction:column;height:100vh;width:100%}
+.screen.active{display:flex}
+
+/* MENU */
+#sMenu{background:linear-gradient(150deg,#0d1b3e,#1a2a5e,#050d1a);align-items:center;justify-content:center;gap:22px;padding:40px 20px}
+.logo{font-size:2.6rem;font-weight:900;color:#fff;letter-spacing:5px;text-shadow:0 0 40px rgba(100,200,255,.9);text-align:center}
+.sub{color:rgba(255,255,255,.45);font-size:.8rem;letter-spacing:3px;text-transform:uppercase}
+.cards{display:flex;flex-direction:column;gap:14px;width:100%;max-width:340px}
+.pcard{border-radius:22px;padding:20px;cursor:pointer;border:none;text-align:left;transition:transform .15s}
+.pcard:active{transform:scale(.97)}
+.paero{background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.45);box-shadow:0 8px 32px rgba(79,163,224,.3)}
+.phack{background:rgba(0,30,0,.88);border:1.5px solid rgba(0,255,65,.4);box-shadow:0 8px 32px rgba(0,255,65,.15)}
+.ci{font-size:2rem;margin-bottom:8px}
+.ct{font-size:1.1rem;font-weight:800;margin-bottom:4px}
+.cd{font-size:.76rem;line-height:1.4;opacity:.85}
+.paero .ct{color:#fff}.paero .cd{color:rgba(255,255,255,.85)}
+.phack .ct{color:#00ff41;font-family:monospace}.phack .cd{color:rgba(0,200,40,.8);font-family:monospace}
+
+/* GAME THEMES */
+body.aero{background:linear-gradient(160deg,#a8d8f0,#4fa3e0 50%,#1a6bb5 85%,#0d4a8a)}
+body.hack{background:#000}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;flex-shrink:0}
+.aero .topbar{background:rgba(255,255,255,.22);border-bottom:1px solid rgba(255,255,255,.35)}
+.hack .topbar{background:rgba(0,14,0,.95);border-bottom:1px solid rgba(0,255,65,.3)}
+.tbtn{background:none;border:none;cursor:pointer;font-size:1rem;padding:5px 10px;border-radius:8px;font-weight:700}
+.aero .tbtn{color:#fff}.hack .tbtn{color:#00ff41;font-family:monospace}
+.clock{font-family:monospace;font-size:1.4rem;font-weight:700}
+.aero .clock{color:#fff;text-shadow:0 2px 10px rgba(0,80,200,.5)}
+.hack .clock{color:#00ff41;text-shadow:0 0 12px #00ff41}
+.skip{border:none;cursor:pointer;border-radius:12px;padding:7px 13px;font-size:.73rem;font-weight:700}
+.aero .skip{background:rgba(255,255,255,.3);color:#fff;border:1px solid rgba(255,255,255,.5)}
+.hack .skip{background:rgba(0,255,65,.1);color:#00ff41;border:1px solid rgba(0,255,65,.4);font-family:monospace}
+
+/* STATSBAR */
+.statsbar{display:flex;gap:10px;align-items:center;padding:8px 14px;flex-shrink:0}
+.aero .statsbar{background:rgba(255,255,255,.12);border-bottom:1px solid rgba(255,255,255,.2)}
+.hack .statsbar{background:rgba(0,8,0,.9);border-bottom:1px solid rgba(0,255,65,.18)}
+.stat{flex:1}
+.slabel{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.aero .slabel{color:rgba(255,255,255,.7)}.hack .slabel{color:rgba(0,200,40,.6);font-family:monospace}
+.strack{height:8px;border-radius:4px;background:rgba(0,0,0,.25);overflow:hidden}
+.hack .strack{background:rgba(0,40,0,.5)}
+.sfill{height:100%;border-radius:4px;transition:width .5s}
+.hunger{background:linear-gradient(90deg,#ff6b35,#ffa500)}
+.inspo{background:linear-gradient(90deg,#a855f7,#ec4899)}
+.hack .hunger{background:linear-gradient(90deg,#ff3300,#ff6600)}
+.hack .inspo{background:linear-gradient(90deg,#00ff41,#00cc33)}
+.money{font-family:monospace;font-size:.9rem;font-weight:700;white-space:nowrap}
+.aero .money{color:#ffe066}.hack .money{color:#00ff41;text-shadow:0 0 8px #00ff41}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:10px 12px}
+.stitle{font-size:.67rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-family:monospace}
+.aero .stitle{color:rgba(255,255,255,.75)}.hack .stitle{color:rgba(0,200,40,.65)}
+.progress{font-size:.7rem;text-align:right;margin-bottom:6px;font-family:monospace}
+.aero .progress{color:rgba(255,255,255,.65)}.hack .progress{color:rgba(0,200,40,.6)}
+
+/* JOB CARDS */
+.jcard{border-radius:16px;padding:13px 15px;margin-bottom:9px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:opacity .2s,transform .1s}
+.jcard:active{transform:scale(.97)}
+.jcard.done{opacity:.38;pointer-events:none}
+.aero .jcard{background:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.5);box-shadow:0 3px 14px rgba(79,163,224,.15)}
+.hack .jcard{background:rgba(0,22,0,.82);border:1px solid rgba(0,255,65,.22)}
+.ji{font-size:1.7rem;flex-shrink:0}
+.jinfo{flex:1;min-width:0}
+.jname{font-size:.87rem;font-weight:700}
+.aero .jname{color:#fff}.hack .jname{color:#00ff41;font-family:monospace}
+.jdesc{font-size:.68rem;margin-top:2px;opacity:.75}
+.aero .jdesc{color:rgba(255,255,255,.9)}.hack .jdesc{color:rgba(0,200,40,.8);font-family:monospace}
+.jrew{font-family:monospace;font-size:.8rem;font-weight:700;flex-shrink:0}
+.aero .jrew{color:#ffe066}.hack .jrew{color:#00ff41}
+
+/* SHOP */
+.sitem{border-radius:14px;padding:13px 15px;margin-bottom:9px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .1s}
+.sitem:active{transform:scale(.97)}
+.aero .sitem{background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.4)}
+.hack .sitem{background:rgba(0,20,0,.8);border:1px solid rgba(0,255,65,.2)}
+.siname{font-size:.88rem;font-weight:700}
+.aero .siname{color:#fff}.hack .siname{color:#00ff41;font-family:monospace}
+.sidesc{font-size:.7rem;margin-top:2px;opacity:.75}
+.aero .sidesc{color:rgba(255,255,255,.85)}.hack .sidesc{color:rgba(0,200,40,.8);font-family:monospace}
+.siprice{font-family:monospace;font-size:.85rem;font-weight:700}
+.aero .siprice{color:#ffe066}.hack .siprice{color:#00ff41}
+
+/* PROMO */
+.pinput{width:100%;padding:12px 14px;border-radius:12px;font-size:.95rem;font-weight:700;outline:none;letter-spacing:2px;text-transform:uppercase}
+.aero .pinput{background:rgba(255,255,255,.3);border:1.5px solid rgba(255,255,255,.5);color:#fff}
+.aero .pinput::placeholder{color:rgba(255,255,255,.45)}
+.hack .pinput{background:rgba(0,18,0,.95);border:1px solid rgba(0,255,65,.4);color:#00ff41;font-family:monospace}
+.hack .pinput::placeholder{color:rgba(0,255,65,.3)}
+.pmsg{margin-top:10px;padding:10px 14px;border-radius:10px;font-size:.82rem;font-weight:700;display:none}
+.pmsg.show{display:block}
+.pmsg.ok{background:rgba(50,200,80,.18);color:#50ee80;border:1px solid rgba(50,200,80,.3)}
+.pmsg.err{background:rgba(200,50,50,.18);color:#ee5050;border:1px solid rgba(200,50,50,.3)}
+.phints{margin-top:16px;font-size:.7rem;line-height:1.7;font-family:monospace}
+.aero .phints{color:rgba(255,255,255,.6)}.hack .phints{color:rgba(0,200,40,.55)}
+
+/* BOTTOMBAR */
+.bottombar{display:flex;gap:8px;padding:8px 10px;flex-shrink:0}
+.aero .bottombar{border-top:1px solid rgba(255,255,255,.2)}
+.hack .bottombar{border-top:1px solid rgba(0,255,65,.18);background:rgba(0,6,0,.95)}
+.tabBtn{flex:1;border:none;cursor:pointer;border-radius:13px;padding:9px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:monospace;font-size:.68rem;font-weight:700;transition:all .15s}
+.tabBtn:active{transform:scale(.95)}
+.aero .tabBtn{background:rgba(255,255,255,.2);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.2)}
+.aero .tabBtn.on{background:rgba(255,255,255,.42);color:#fff;border-color:rgba(255,255,255,.5)}
+.hack .tabBtn{background:rgba(0,20,0,.8);color:rgba(0,255,65,.45);border:1px solid rgba(0,255,65,.15)}
+.hack .tabBtn.on{background:rgba(0,55,0,.9);color:#00ff41;border-color:rgba(0,255,65,.5);box-shadow:0 0 10px rgba(0,255,65,.2)}
+.tbi{font-size:1.2rem}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.mbox{width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:20px 18px 30px;animation:sup .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes sup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.aero .mbox{background:linear-gradient(180deg,rgba(90,160,230,.98),rgba(40,110,200,.99));border-top:2px solid rgba(255,255,255,.6);box-shadow:0 -8px 40px rgba(79,163,224,.4)}
+.hack .mbox{background:rgba(0,10,0,.99);border-top:2px solid rgba(0,255,65,.5);box-shadow:0 -8px 40px rgba(0,255,65,.2)}
+.mhandle{width:38px;height:4px;border-radius:2px;margin:0 auto 14px}
+.aero .mhandle{background:rgba(255,255,255,.5)}.hack .mhandle{background:rgba(0,255,65,.4)}
+.mtitle{font-size:1.1rem;font-weight:800;margin-bottom:6px;font-family:monospace}
+.aero .mtitle{color:#fff}.hack .mtitle{color:#00ff41}
+.mdesc{font-size:.77rem;margin-bottom:14px;font-family:monospace}
+.aero .mdesc{color:rgba(255,255,255,.85)}.hack .mdesc{color:rgba(0,200,40,.8)}
+.mclose{width:100%;margin-top:12px;padding:10px;border-radius:12px;border:none;cursor:pointer;font-size:.8rem;background:rgba(0,0,0,.18);color:rgba(255,255,255,.6)}
+
+/* PUZZLE */
+.pgrid{display:grid;gap:4px;margin:14px auto;width:fit-content}
+.ptile{display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;border-radius:10px;cursor:pointer;transition:transform .1s;user-select:none;border:none}
+.ptile:active{transform:scale(.88)}
+.aero .ptile{background:rgba(255,255,255,.38);border:2px solid rgba(255,255,255,.6);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+.aero .ptile.empty{background:rgba(0,0,0,.12);border:2px dashed rgba(255,255,255,.3);cursor:default}
+.hack .ptile{background:rgba(0,30,0,.9);border:1px solid rgba(0,255,65,.4);color:#00ff41;font-family:monospace;font-size:.85rem}
+.hack .ptile.empty{background:rgba(0,50,0,.25);border:1px dashed rgba(0,255,65,.2);cursor:default}
+.phint{font-size:.72rem;text-align:center;margin-bottom:8px;font-family:monospace}
+.aero .phint{color:rgba(255,255,255,.65)}.hack .phint{color:rgba(0,200,40,.55)}
+
+/* QUIZ */
+.qq{font-size:.95rem;font-weight:700;margin-bottom:14px;font-family:monospace}
+.aero .qq{color:#fff}.hack .qq{color:#00ff41}
+.qopt{display:block;width:100%;text-align:left;padding:11px 14px;margin-bottom:9px;border-radius:12px;cursor:pointer;font-size:.83rem;font-weight:600;border:none;font-family:monospace;transition:all .15s}
+.aero .qopt{background:rgba(255,255,255,.28);color:#fff;border:1px solid rgba(255,255,255,.35)}
+.hack .qopt{background:rgba(0,22,0,.9);color:#00ff41;border:1px solid rgba(0,255,65,.25)}
+.qopt.correct{background:rgba(50,200,80,.4)!important;border-color:#50c850!important}
+.qopt.wrong{background:rgba(200,50,50,.32)!important;border-color:#c85050!important}
+
+/* WORDSEARCH */
+.wsgrid{display:grid;gap:2px;user-select:none;margin:10px auto;width:fit-content}
+.wsc{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;font-family:monospace;border-radius:6px;touch-action:none}
+.aero .wsc{background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.28)}
+.hack .wsc{background:rgba(0,18,0,.85);color:#00ff41;border:1px solid rgba(0,255,65,.14)}
+.wsc.sel{background:rgba(255,255,255,.5)!important;color:#000}
+.hack .wsc.sel{background:rgba(0,255,65,.32)!important;color:#00ff41}
+.wsc.found{background:rgba(255,220,50,.55)!important;color:#000}
+.hack .wsc.found{background:rgba(0,200,65,.5)!important;color:#000}
+.wswords{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.wsw{font-family:monospace;font-size:.72rem;padding:3px 10px;border-radius:20px}
+.aero .wsw{background:rgba(255,255,255,.28);color:#fff;border:1px solid rgba(255,255,255,.4)}
+.hack .wsw{background:rgba(0,28,0,.85);color:#00ff41;border:1px solid rgba(0,255,65,.3)}
+.wsw.fnd{text-decoration:line-through;opacity:.45}
+
+/* ACTION BTN */
+.abtn{width:100%;padding:13px;border-radius:14px;border:none;cursor:pointer;font-size:.93rem;font-weight:800;margin-top:10px;font-family:monospace}
+.aero .abtn{background:rgba(255,255,255,.35);color:#fff;border:1.5px solid rgba(255,255,255,.6);box-shadow:0 4px 16px rgba(79,163,224,.3)}
+.hack .abtn{background:rgba(0,255,65,.1);color:#00ff41;border:1px solid rgba(0,255,65,.5)}
+.abtn:active{transform:scale(.97)}
+
+/* TOAST */
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);padding:9px 20px;border-radius:20px;font-weight:700;font-size:.83rem;white-space:nowrap;z-index:200;pointer-events:none;font-family:monospace;animation:tin .25s,tout .25s 1.75s forwards}
+@keyframes tin{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes tout{to{opacity:0}}
+.aero .toast{background:rgba(255,255,255,.38);color:#fff;border:1px solid rgba(255,255,255,.5)}
+.hack .toast{background:rgba(0,25,0,.97);color:#00ff41;border:1px solid rgba(0,255,65,.4)}
+
+/* BANNER */
+.banner{background:rgba(255,220,50,.12);border:1px solid rgba(255,220,50,.35);border-radius:12px;padding:10px;text-align:center;color:#ffe066;font-size:.78rem;font-weight:700;margin-bottom:10px;display:none}
+.hack .banner{border-color:rgba(0,255,65,.35);color:#00ff41}
+.banner.show{display:block}
+
+/* MATRIX */
+#mx{position:fixed;inset:0;pointer-events:none;opacity:.08;z-index:0;display:none}
+body.hack #mx{display:block}
+.screen{position:relative;z-index:1}
+</style>
+</head>
+<body>
+<canvas id="mx"></canvas>
+
+<!-- MENU -->
+<div id="sMenu" class="screen active">
+  <div class="logo">LifePath</div>
+  <div class="sub">Выбери свой путь</div>
+  <div class="cards">
+    <button class="pcard paero" onclick="startGame('aero')">
+      <div class="ci">💻</div>
+      <div class="ct">Белый путь — Программист</div>
+      <div class="cd">Пиши код, решай пазлы, строй IT-карьеру. Светлая сторона.</div>
+    </button>
+    <button class="pcard phack" onclick="startGame('hack')">
+      <div class="ci">☠️</div>
+      <div class="ct">DARK_PATH — ХАКЕР</div>
+      <div class="cd">взламывай системы, решай задачи пока никто не смотрит.</div>
+    </button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="sGame" class="screen">
+  <div class="topbar">
+    <button class="tbtn" onclick="goMenu()">← Меню</button>
+    <div class="clock" id="clock">12:00</div>
+    <button class="skip" onclick="skipDay()">⏩ Скип</button>
+  </div>
+  <div class="statsbar">
+    <div class="stat">
+      <div class="slabel">🍕 Голод</div>
+      <div class="strack"><div class="sfill hunger" id="hBar" style="width:80%"></div></div>
+    </div>
+    <div class="stat">
+      <div class="slabel">⚡ Вдохновение</div>
+      <div class="strack"><div class="sfill inspo" id="iBar" style="width:90%"></div></div>
+    </div>
+    <div class="money" id="moneyEl">💰0₽</div>
+  </div>
+  <div class="content" id="content"></div>
+  <div class="bottombar">
+    <button class="tabBtn on" id="tw" onclick="setTab('work')"><span class="tbi">💼</span>Работа</button>
+    <button class="tabBtn" id="ts" onclick="setTab('shop')"><span class="tbi">🛒</span>Магазин</button>
+    <button class="tabBtn" id="tp" onclick="setTab('promo')"><span class="tbi">🎁</span>Промокод</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="mbox" id="mbox">
+    <div class="mhandle"></div>
+    <div id="mcontent"></div>
+  </div>
+</div>
+
+<script>
+const AERO_JOBS=[
+  {id:'a1',icon:'🔧',name:'Починить баг',desc:'Найди ошибку в коде',reward:120,type:'puzzle',size:2},
+  {id:'a2',icon:'🌐',name:'Сделать сайт',desc:'Собери структуру страницы',reward:200,type:'puzzle',size:3},
+  {id:'a3',icon:'📱',name:'Мобильное приложение',desc:'Разработай UI для клиента',reward:280,type:'puzzle',size:3},
+  {id:'a4',icon:'🗄️',name:'База данных',desc:'Оптимизируй запросы',reward:180,type:'puzzle',size:2},
+  {id:'a5',icon:'🤖',name:'Чат-бот',desc:'Напиши логику диалога',reward:220,type:'puzzle',size:3},
+  {id:'a6',icon:'🔐',name:'Авторизация',desc:'Реализуй систему входа',reward:260,type:'puzzle',size:4},
+  {id:'a7',icon:'📊',name:'Дашборд',desc:'Визуализируй данные клиента',reward:300,type:'puzzle',size:4},
+  {id:'a8',icon:'🚀',name:'Деплой на сервер',desc:'Настрой CI/CD пайплайн',reward:350,type:'puzzle',size:4},
+  {id:'a9',icon:'🔁',name:'Рефакторинг',desc:'Перепиши легаси-код',reward:240,type:'puzzle',size:3},
+  {id:'a10',icon:'🧪',name:'Написать тесты',desc:'Покрой функции юнит-тестами',reward:190,type:'puzzle',size:3},
+  {id:'a11',icon:'🎮',name:'Мини-игра',desc:'Сделай прототип игры',reward:320,type:'puzzle',size:4},
+  {id:'a12',icon:'📡',name:'REST API',desc:'Разработай эндпоинты',reward:270,type:'puzzle',size:3},
+  {id:'a13',icon:'🧠',name:'ML модель',desc:'Обучи нейросеть',reward:400,type:'puzzle',size:5},
+  {id:'a14',icon:'💬',name:'Чат реального времени',desc:'WebSocket + Redis',reward:380,type:'puzzle',size:5},
+  {id:'a15',icon:'🌍',name:'Локализация',desc:'Переведи на 5 языков',reward:210,type:'puzzle',size:3},
+  {id:'a16',icon:'🔍',name:'Code Review',desc:'Проверь код коллег',reward:160,type:'puzzle',size:2},
+  {id:'a17',icon:'📦',name:'npm-пакет',desc:'Опубликуй библиотеку',reward:290,type:'puzzle',size:4},
+  {id:'a18',icon:'⚙️',name:'Автоматизация',desc:'Напиши скрипт на Python',reward:170,type:'puzzle',size:2},
+  {id:'a19',icon:'🖥️',name:'Desktop приложение',desc:'Electron + React',reward:340,type:'puzzle',size:5},
+  {id:'a20',icon:'☁️',name:'Облачная архитектура',desc:'Спроектируй микросервисы',reward:450,type:'puzzle',size:5},
+];
+const HACK_JOBS=[
+  {id:'h1',icon:'🔓',name:'ВЗЛОМ: WiFi',desc:'Обойди защиту роутера',reward:150,type:'quiz',topic:'wifi'},
+  {id:'h2',icon:'💉',name:'SQL ИНЪЕКЦИЯ',desc:'Взломай базу данных',reward:200,type:'ws',words:['SQL','DROP','TABLE','SELECT','WHERE']},
+  {id:'h3',icon:'🦠',name:'ВИРУС',desc:'Загрузи пейлоад',reward:180,type:'quiz',topic:'virus'},
+  {id:'h4',icon:'🕵️',name:'ФИШИНГ',desc:'Создай поддельную страницу',reward:160,type:'ws',words:['HOOK','BAIT','CLONE','MAIL','LOGIN']},
+  {id:'h5',icon:'🔑',name:'БРУТФОРС',desc:'Перебери пароли',reward:220,type:'quiz',topic:'brute'},
+  {id:'h6',icon:'🌐',name:'DDoS АТАКА',desc:'Перегрузи сервер',reward:300,type:'ws',words:['FLOOD','PING','BOTNET','UDP','SYN']},
+  {id:'h7',icon:'👤',name:'КРАЖА АККАУНТА',desc:'Перехвати токен сессии',reward:280,type:'quiz',topic:'session'},
+  {id:'h8',icon:'💾',name:'RANSOMWARE',desc:'Зашифруй файлы цели',reward:350,type:'ws',words:['AES','KEY','LOCK','CRYPT','RANSOM']},
+  {id:'h9',icon:'📡',name:'MitM АТАКА',desc:'Клиент ↔ ты ↔ сервер',reward:320,type:'quiz',topic:'mitm'},
+  {id:'h10',icon:'🖥️',name:'РУТКИТ',desc:'Скройся в системе',reward:390,type:'ws',words:['ROOT','HIDE','KERNEL','HOOK','PRIV']},
+  {id:'h11',icon:'📨',name:'СПАМ',desc:'Разошли письма по базе',reward:140,type:'quiz',topic:'spam'},
+  {id:'h12',icon:'🔭',name:'РАЗВЕДКА',desc:'Собери данные о цели',reward:170,type:'ws',words:['SCAN','PORT','NMAP','HOST','DNS']},
+  {id:'h13',icon:'⚡',name:'0DAY ЭКСПЛОЙТ',desc:'Незакрытая уязвимость',reward:500,type:'quiz',topic:'exploit'},
+  {id:'h14',icon:'📲',name:'КЕЙЛОГГЕР',desc:'Перехвати ввод клавиш',reward:260,type:'ws',words:['KEY','LOG','INPUT','HOOK','SEND']},
+  {id:'h15',icon:'🔗',name:'ЦЕПОЧКА АТАК',desc:'Скомбинируй методы',reward:420,type:'quiz',topic:'chain'},
+  {id:'h16',icon:'🧩',name:'РЕВЕРС-ИНЖИНИРИНГ',desc:'Разбери исполняемый файл',reward:380,type:'ws',words:['ASM','CALL','JMP','PUSH','RET']},
+  {id:'h17',icon:'🌑',name:'ТЁМНЫЙ ВЕБ',desc:'Создай .onion сервис',reward:340,type:'quiz',topic:'darkweb'},
+  {id:'h18',icon:'💳',name:'КАРДИНГ',desc:'Обнали карточные данные',reward:310,type:'ws',words:['CARD','CVV','BIN','DUMP','TRACK']},
+  {id:'h19',icon:'🤖',name:'БОТНЕТ',desc:'Управляй зараженными',reward:450,type:'quiz',topic:'botnet'},
+  {id:'h20',icon:'☢️',name:'APT АТАКА',desc:'Тихая долгая операция',reward:600,type:'ws',words:['APT','ZERO','PIVOT','HIDE','MOVE']},
+];
+const QUIZ={
+  wifi:[
+    {q:'Сколько бит в ключе WPA2?',a:['128 бит','256 бит','64 бит','512 бит'],c:1},
+    {q:'Что такое SSID?',a:['Имя сети','IP адрес','MAC адрес','Пароль'],c:0},
+    {q:'Инструмент для захвата пакетов?',a:['Wireshark','Notepad','Chrome','Excel'],c:0},
+  ],
+  virus:[
+    {q:'Что делает троян?',a:['Открывает тайный доступ','Удаляет файлы','Форматирует диск','Обновляет ОС'],c:0},
+    {q:'Как распространяется червь?',a:['По сети автоматически','Через дискеты','По воздуху','Телепатия'],c:0},
+    {q:'Что такое payload?',a:['Вредоносная нагрузка','Зарплата','Файл конфига','Пароль'],c:0},
+  ],
+  brute:[
+    {q:'Что такое брутфорс?',a:['Перебор паролей','Взлом физически','Социальная инженерия','Фишинг'],c:0},
+    {q:'Самый слабый пароль?',a:['123456','qwerty123!','X9#mK2@p','Tr0ub4dor&'],c:0},
+    {q:'Лучшая защита от брутфорса?',a:['2FA + лимит попыток','Длинный пароль','Капча','Антивирус'],c:0},
+  ],
+  session:[
+    {q:'Где хранится сессионный токен?',a:['Cookie','Оперативная память','Жёсткий диск','SIM-карта'],c:0},
+    {q:'Что такое XSS?',a:['Инъекция скрипта','Тип вируса','Протокол','Браузер'],c:0},
+    {q:'Как защитить cookie?',a:['Флаг HttpOnly','Шифрование AES','VPN','Firewall'],c:0},
+  ],
+  mitm:[
+    {q:'Расшифровка MitM?',a:['Man in the Middle','Machine in Time','Model in Test','Module in Terminal'],c:0},
+    {q:'Что такое ARP-spoofing?',a:['Подмена MAC-адреса','Взлом WiFi','Перехват DNS','Кража cookie'],c:0},
+    {q:'Защита от MitM?',a:['HTTPS + сертификат','Антивирус','Только VPN','Файрвол'],c:0},
+  ],
+  spam:[
+    {q:'Что нужно для спам-рассылки?',a:['База email-адресов','Много времени','Кофе','Хороший ноутбук'],c:0},
+    {q:'Что такое SPF-запись?',a:['Защита от спуфинга','Формат файла','Шифрование','Протокол'],c:0},
+    {q:'Как фильтруется спам?',a:['Байесов фильтр','Вручную','Антивирусом','Брандмауэром'],c:0},
+  ],
+  exploit:[
+    {q:'Что такое 0day?',a:['Незакрытая уязвимость','Первый день работы','Нулевой трафик','Пустой сервер'],c:0},
+    {q:'CVE — это?',a:['Каталог уязвимостей','Вирус','Браузер','Язык программирования'],c:0},
+    {q:'Buffer overflow — это?',a:['Переполнение буфера','Переполнение диска','Много трафика','Зависание'],c:0},
+  ],
+  chain:[
+    {q:'Что такое kill chain?',a:['Цепочка этапов атаки','Вирус-цепочка','Протокол защиты','Тип шифра'],c:0},
+    {q:'Первый шаг атаки обычно?',a:['Разведка','Взлом сразу','Шифрование','Отчёт'],c:0},
+    {q:'Lateral movement это?',a:['Движение внутри сети','Боковой прыжок','Тип вируса','Выход'],c:0},
+  ],
+  darkweb:[
+    {q:'Что такое Tor?',a:['Анонимная сеть','Браузер','VPN','Файрвол'],c:0},
+    {q:'.onion домены работают через?',a:['Tor сеть','Обычный интернет','DNS','Google'],c:0},
+    {q:'Что скрывает Tor?',a:['IP адрес','Пароли','Файлы','Историю браузера'],c:0},
+  ],
+  botnet:[
+    {q:'Что такое C&C сервер?',a:['Центр управления ботами','Сервер компании','Облако','Роутер'],c:0},
+    {q:'Как заражают ботнет?',a:['Вредоносное ПО','Голосом','Через физический контакт','Телефоном'],c:0},
+    {q:'Зачем нужен ботнет?',a:['DDoS, спам, майнинг','Хранить файлы','Смотреть видео','Играть'],c:0},
+  ],
+};
+const PROMOS={'LIFEPATH2025':500,'NEWDAY':200,'DARKSIDE':300,'HACKER':250,'AERO':180,'MAUYAAPPS':400,'CREAM':350,'MCS2025':420};
+const SHOP=[
+  {icon:'🍕',name:'Пицца',desc:'+30% голода',h:30,i:0,p:80},
+  {icon:'🍔',name:'Бургер комбо',desc:'+60% голода',h:60,i:0,p:150},
+  {icon:'🍱',name:'Полный обед',desc:'+100% голода',h:100,i:0,p:280},
+  {icon:'☕',name:'Кофе',desc:'+25% вдохновения',h:0,i:25,p:60},
+  {icon:'🎧',name:'Музыка + энергетик',desc:'+55% вдохновения',h:0,i:55,p:130},
+  {icon:'🧘',name:'Медитация',desc:'+100% вдохновения',h:0,i:100,p:240},
+  {icon:'🌟',name:'VIP пакет',desc:'+80% голода, +80% вдохновения',h:80,i:80,p:350},
+];
+
+// STATE
+let mode='aero',money=0,hunger=80,inspo=90,mins=0,done={},tab='work',dayN=1,usedP={};
+let dayTimer=null,curJob=null,wsSelStart=null,wsSelEnd=null,wsGrid=null,wsWords=null,wsFound=null;
+
+// HELPERS
+const $=id=>document.getElementById(id);
+function shuf(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function clockStr(){const t=12*60+mins,h=Math.floor(t/60)%24,m=t%60;return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;}
+function qs(sel){return document.querySelector(sel);}
+function isHack(){return mode==='hack';}
+function thm(){return isHack()?'hack':'aero';}
+
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(x=>x.remove());
+  const d=document.createElement('div');
+  d.className='toast';d.textContent=msg;
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(),2100);
+}
+
+function updateUI(){
+  $('hBar').style.width=hunger+'%';
+  $('iBar').style.width=inspo+'%';
+  $('moneyEl').textContent='💰'+money+'₽';
+  $('clock').textContent=clockStr();
+}
+
+// GAME
+function startGame(m){
+  mode=m;money=0;hunger=80;inspo=90;mins=0;done={};tab='work';dayN=1;usedP={};
+  document.body.className=m;
+  ['sMenu','sGame'].forEach(id=>$(id).classList.remove('active'));
+  $('sGame').classList.add('active');
+  updateUI();setTab('work');startCycle();
+  if(m==='hack')initMatrix();
+}
+function goMenu(){clearInterval(dayTimer);document.body.className='';$('sMenu').classList.add('active');$('sGame').classList.remove('active');}
+
+function startCycle(){
+  clearInterval(dayTimer);
+  dayTimer=setInterval(()=>{
+    mins+=30;hunger=Math.max(0,hunger-2.5);inspo=Math.max(0,inspo-1.5);
+    updateUI();
+    if(mins>=720){clearInterval(dayTimer);setTimeout(newDay,1200);}
+    else if(tab==='work') renderWork();
+  },5000);
+}
+
+function skipDay(){
+  clearInterval(dayTimer);
+  const rem=(720-mins)/30;let s=0;
+  const ft=setInterval(()=>{
+    mins+=30;hunger=Math.max(0,hunger-2.5);inspo=Math.max(0,inspo-1.5);
+    updateUI();s++;
+    if(s>=rem){clearInterval(ft);setTimeout(newDay,300);}
+  },80);
+}
+
+function newDay(){
+  done={};mins=0;dayN++;
+  toast('📅 День '+dayN+'!');
+  if(tab==='work')renderWork();
+  startCycle();
+}
+
+// TABS
+function setTab(t){
+  tab=t;
+  ['w','s','p'].forEach((id,i)=>{
+    $('t'+id).classList.toggle('on',['work','shop','promo'][i]===t);
+  });
+  if(t==='work')renderWork();
+  else if(t==='shop')renderShop();
+  else renderPromo();
+}
+
+// WORK
+function renderWork(){
+  const jobs=isHack()?HACK_JOBS:AERO_JOBS;
+  const dc=Object.keys(done).length;
+  let h=`<div class="progress">Работ: ${dc}/20 · День ${dayN}</div>`;
+  h+=`<div class="banner${dc>=20?' show':''}" id="banner">✅ Все работы выполнены! Скипай день.</div>`;
+  h+=`<div class="stitle">${isHack()?'> АКТИВНЫЕ_ЗАДАНИЯ':'// Задачи на сегодня'}</div>`;
+  jobs.forEach(j=>{
+    const d=done[j.id];
+    h+=`<div class="jcard${d?' done':''}" onclick="jobClick('${j.id}')">
+      <span class="ji">${j.icon}</span>
+      <div class="jinfo">
+        <div class="jname">${j.name}</div>
+        <div class="jdesc">${j.desc}</div>
+      </div>
+      ${d?'<span style="font-size:1.2rem">✅</span>':`<span class="jrew">+${j.reward}₽</span>`}
+    </div>`;
+  });
+  $('content').innerHTML=h;
+}
+
+function jobClick(id){
+  const jobs=isHack()?HACK_JOBS:AERO_JOBS;
+  const j=jobs.find(x=>x.id===id);
+  if(!j||done[id])return;
+  if(hunger<=0){toast('🍕 Нужно поесть!');return;}
+  if(inspo<=0){toast('⚡ Нужно вдохновение!');return;}
+  curJob=j;
+  const mc=$('mcontent');
+  mc.innerHTML=`<div class="mtitle">${j.icon} ${j.name}</div><div class="mdesc">${j.desc}</div><div id="mg"></div><button class="mclose" onclick="closeModal()">Закрыть</button>`;
+  if(j.type==='puzzle')buildPuzzle(j,$('mg'));
+  else if(j.type==='quiz')buildQuiz(j,$('mg'));
+  else if(j.type==='ws')buildWS(j,$('mg'));
+  $('overlay').classList.add('open');
+}
+
+function completeJob(){
+  if(!curJob)return;
+  done[curJob.id]=true;money+=curJob.reward;
+  toast('+'+curJob.reward+'₽ 🎉');
+  closeModal();updateUI();
+  if(tab==='work')renderWork();
+}
+
+// PUZZLE
+function buildPuzzle(j,el){
+  const sz=j.size;
+  const emj=['🌊','🌿','⚡','🔮','💎','🌸','🎯','🔥','❄️','🌙','⭐','🎪','🦋','🌈','🎵','🏆','🦊','🐉','🌺','💫','🎨','🎲'];
+  let tiles=[...Array(sz*sz-1)].map((_,i)=>emj[i%emj.length]);
+  tiles.push('');
+  let board=shuf(tiles);
+  const ts=sz>=5?50:58;
+
+  function rnd(){
+    let h=`<div class="pgrid" style="grid-template-columns:repeat(${sz},1fr);gap:4px">`;
+    board.forEach((t,i)=>{
+      h+=`<button class="ptile${t?'':' empty'}" style="width:${ts}px;height:${ts}px" onclick="pMove(${i})">${t}</button>`;
+    });
+    h+='</div>';
+    h+=`<p class="phint">Переставляй фишки рядом с пустой клеткой</p>`;
+    h+=`<button class="abtn" onclick="completeJob()">✅ Сдать работу</button>`;
+    el.innerHTML=h;
+    window._pBoard=board;window._pSz=sz;
+  }
+  rnd();
+  window._pRender=rnd;
+}
+
+window.pMove=function(idx){
+  const board=window._pBoard,sz=window._pSz;
+  const ei=board.indexOf('');
+  const r=Math.floor(idx/sz),c=idx%sz,er=Math.floor(ei/sz),ec=ei%sz;
+  if((Math.abs(r-er)===1&&c===ec)||(Math.abs(c-ec)===1&&r===er)){
+    [board[idx],board[ei]]=[board[ei],board[idx]];
+    window._pRender();
+  }
+};
+
+// QUIZ
+function buildQuiz(j,el){
+  const pool=QUIZ[j.topic]||QUIZ.wifi;
+  let q=pool[Math.floor(Math.random()*pool.length)];
+  function render(){
+    el.innerHTML=`<div class="qq">${q.q}</div>`+
+      q.a.map((opt,i)=>`<button class="qopt" onclick="qPick(${i},${q.c},this)">${opt}</button>`).join('');
+  }
+  render();
+  window._qJob=j;window._qPool=pool;window._qRender=render;
+}
+
+window.qPick=function(i,c,btn){
+  document.querySelectorAll('.qopt').forEach(b=>{b.onclick=null;});
+  if(i===c){btn.classList.add('correct');setTimeout(completeJob,700);}
+  else{
+    btn.classList.add('wrong');
+    document.querySelectorAll('.qopt')[c].classList.add('correct');
+    setTimeout(()=>{
+      toast('❌ Неверно! Ещё раз');
+      const pool=window._qPool;
+      const mc=$('mcontent');
+      const g=document.getElementById('mg');
+      if(!g)return;
+      const q2=pool[Math.floor(Math.random()*pool.length)];
+      g.innerHTML=`<div class="qq">${q2.q}</div>`+
+        q2.a.map((opt,i2)=>`<button class="qopt" onclick="qPick(${i2},${q2.c},this)">${opt}</button>`).join('');
+    },1000);
+  }
+};
+
+// WORDSEARCH
+const GS=7;
+function buildWS(j,el){
+  const words=j.words;
+  const grid=Array(GS).fill(null).map(()=>Array(GS).fill(''));
+  words.forEach(word=>{
+    let placed=false,att=0;
+    while(!placed&&att<300){
+      att++;
+      const dir=Math.random()>.5?'h':'v';
+      const r=Math.floor(Math.random()*GS),c=Math.floor(Math.random()*GS);
+      if(dir==='h'&&c+word.length<=GS){
+        let ok=true;for(let i=0;i<word.length;i++)if(grid[r][c+i]&&grid[r][c+i]!==word[i]){ok=false;break;}
+        if(ok){for(let i=0;i<word.length;i++)grid[r][c+i]=word[i];placed=true;}
+      }else if(dir==='v'&&r+word.length<=GS){
+        let ok=true;for(let i=0;i<word.length;i++)if(grid[r+i]&&grid[r+i][c]&&grid[r+i][c]!==word[i]){ok=false;break;}
+        if(ok){for(let i=0;i<word.length;i++)grid[r+i][c]=word[i];placed=true;}
+      }
+    }
+  });
+  const L='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for(let r=0;r<GS;r++)for(let c=0;c<GS;c++)if(!grid[r][c])grid[r][c]=L[Math.floor(Math.random()*26)];
+
+  wsGrid=grid;wsWords=words;wsFound=new Set();
+  wsSelStart=null;wsSelEnd=null;
+
+  renderWS(el,words);
+}
+
+function renderWS(el,words){
+  if(!el)return;
+  let h=`<div class="wswords">`;
+  words.forEach(w=>{h+=`<span class="wsw${wsFound.has(w)?' fnd':''}" id="wsw_${w}">${w}</span>`;});
+  h+=`</div><div class="wsgrid" id="wsgrid" style="grid-template-columns:repeat(${GS},1fr)">`;
+  for(let r=0;r<GS;r++)for(let c=0;c<GS;c++){
+    const k=`${r}_${c}`;
+    h+=`<div class="wsc" id="wsc_${k}" data-r="${r}" data-c="${c}"
+      ontouchstart="wsTouch(event,'start',${r},${c})"
+      ontouchmove="wsTouch(event,'move',${r},${c})"
+      ontouchend="wsTouch(event,'end',${r},${c})"
+      onmousedown="wsM('down',${r},${c})"
+      onmousemove="wsM('move',${r},${c})"
+      onmouseup="wsM('up',${r},${c})"
+    >${wsGrid[r][c]}</div>`;
+  }
+  h+='</div>';
+  el.innerHTML=h;
+  updateWSCells();
+}
+
+function updateWSCells(){
+  if(!wsGrid)return;
+  const sel=getSelSet();
+  const fnd=getFoundSet();
+  for(let r=0;r<GS;r++)for(let c=0;c<GS;c++){
+    const el=document.getElementById(`wsc_${r}_${c}`);
+    if(!el)continue;
+    const k=`${r},${c}`;
+    el.classList.remove('sel','found');
+    if(fnd.has(k))el.classList.add('found');
+    else if(sel.has(k))el.classList.add('sel');
+  }
+  if(wsWords)wsWords.forEach(w=>{
+    const el=document.getElementById('wsw_'+w);
+    if(el){el.classList.toggle('fnd',wsFound.has(w));}
+  });
+}
+
+function getSelSet(){
+  const s=new Set();
+  if(!wsSelStart||!wsSelEnd)return s;
+  const {r:r1,c:c1}=wsSelStart,{r:r2,c:c2}=wsSelEnd;
+  if(r1===r2){const mn=Math.min(c1,c2),mx=Math.max(c1,c2);for(let c=mn;c<=mx;c++)s.add(`${r1},${c}`);}
+  else if(c1===c2){const mn=Math.min(r1,r2),mx=Math.max(r1,r2);for(let r=mn;r<=mx;r++)s.add(`${r},${c1}`);}
+  return s;
+}
+
+function getFoundSet(){
+  const s=new Set();
+  if(!wsFound||!wsGrid||!wsWords)return s;
+  wsFound.forEach(word=>{
+    for(let r=0;r<GS;r++)for(let c=0;c<GS;c++){
+      if(wsGrid[r][c]===word[0]){
+        let mh=true;for(let i=0;i<word.length;i++){if((wsGrid[r][c+i]||'')!==word[i]){mh=false;break;}}
+        if(mh)for(let i=0;i<word.length;i++)s.add(`${r},${c+i}`);
+        let mv=true;for(let i=0;i<word.length;i++){if(!(wsGrid[r+i]&&wsGrid[r+i][c]===word[i])){mv=false;break;}}
+        if(mv)for(let i=0;i<word.length;i++)s.add(`${r+i},${c}`);
+      }
+    }
+  });
+  return s;
+}
+
+function wsCheck(){
+  if(!wsSelStart||!wsSelEnd)return;
+  const {r:r1,c:c1}=wsSelStart,{r:r2,c:c2}=wsSelEnd;
+  let str='';
+  if(r1===r2){const mn=Math.min(c1,c2),mx=Math.max(c1,c2);for(let c=mn;c<=mx;c++)str+=wsGrid[r1][c];}
+  else if(c1===c2){const mn=Math.min(r1,r2),mx=Math.max(r1,r2);for(let r=mn;r<=mx;r++)str+=wsGrid[r][c1];}
+  if(!str)return;
+  const rev=str.split('').reverse().join('');
+  wsWords&&wsWords.forEach(w=>{
+    if(!wsFound.has(w)&&(str===w||rev===w)){
+      wsFound.add(w);toast('✅ '+w);
+      if(wsFound.size===wsWords.length){setTimeout(completeJob,500);}
+    }
+  });
+  wsSelStart=null;wsSelEnd=null;
+  updateWSCells();
+}
+
+// Touch for wordsearch
+window.wsTouch=function(e,phase,r,c){
+  e.preventDefault();
+  if(phase==='start'){wsSelStart={r,c};wsSelEnd={r,c};updateWSCells();}
+  else if(phase==='move'){
+    const t=e.touches[0];
+    const el=document.elementFromPoint(t.clientX,t.clientY);
+    if(el&&el.dataset.r!==undefined){wsSelEnd={r:+el.dataset.r,c:+el.dataset.c};updateWSCells();}
+  }
+  else if(phase==='end'){wsCheck();}
+};
+
+let _mdown=false;
+window.wsM=function(phase,r,c){
+  if(phase==='down'){_mdown=true;wsSelStart={r,c};wsSelEnd={r,c};updateWSCells();}
+  else if(phase==='move'&&_mdown){wsSelEnd={r,c};updateWSCells();}
+  else if(phase==='up'){_mdown=false;wsCheck();}
+};
+
+// SHOP
+function renderShop(){
+  let h=`<div class="stitle">${isHack()?'> МАГАЗИН_РЕСУРСОВ':'// Магазин'}</div>`;
+  SHOP.forEach((item,i)=>{
+    h+=`<div class="sitem" onclick="buyItem(${i})">
+      <span style="font-size:1.7rem">${item.icon}</span>
+      <div style="flex:1">
+        <div class="siname">${item.name}</div>
+        <div class="sidesc">${item.desc}</div>
+      </div>
+      <span class="siprice">${item.p}₽</span>
+    </div>`;
+  });
+  $('content').innerHTML=h;
+}
+
+function buyItem(i){
+  const it=SHOP[i];
+  if(money<it.p){toast('💸 Мало денег!');return;}
+  money-=it.p;hunger=Math.min(100,hunger+it.h);inspo=Math.min(100,inspo+it.i);
+  updateUI();toast(it.icon+' Куплено!');
+}
+
+// PROMO
+function renderPromo(){
+  $('content').innerHTML=`
+    <div class="stitle">${isHack()?'> INJECT_PROMO':'// Промокоды'}</div>
+    <input class="pinput" id="pi" placeholder="${isHack()?'ВВЕДИ_КОД':'Введи промокод'}" maxlength="20" oninput="this.value=this.value.toUpperCase()">
+    <button class="abtn" onclick="redeemPromo()">${isHack()?'> АКТИВИРОВАТЬ':'🎁 Применить'}</button>
+    <div class="pmsg" id="pmsg"></div>
+    <div class="phints">Подсказки: LIFEPATH2025 · AERO · DARKSIDE<br>MAUYAAPPS · CREAM · MCS2025 · HACKER</div>
+  `;
+}
+
+function redeemPromo(){
+  const code=($('pi').value||'').trim().toUpperCase();
+  const pm=$('pmsg');
+  if(!code){pm.className='pmsg err show';pm.textContent='Введи код';return;}
+  if(usedP[code]){pm.className='pmsg err show';pm.textContent='❌ Код уже использован';return;}
+  if(PROMOS[code]){
+    const b=PROMOS[code];money+=b;usedP[code]=true;updateUI();
+    pm.className='pmsg ok show';pm.textContent=`✅ +${b}₽ — Активировано!`;
+    $('pi').value='';
+  }else{pm.className='pmsg err show';pm.textContent='❌ Неверный промокод';}
+}
+
+// MODAL
+function closeModal(){$('overlay').classList.remove('open');curJob=null;}
+function overlayClick(e){if(e.target===$('overlay'))closeModal();}
+
+// MATRIX
+function initMatrix(){
+  const cv=$('mx'),ctx=cv.getContext('2d');
+  cv.width=window.innerWidth;cv.height=window.innerHeight;
+  const cols=Math.floor(cv.width/16),drops=Array(cols).fill(1);
+  setInterval(()=>{
+    ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#00ff41';ctx.font='14px monospace';
+    drops.forEach((d,i)=>{
+      ctx.fillText(String.fromCharCode(0x30A0+Math.random()*96),i*16,d*16);
+      if(d*16>cv.height&&Math.random()>.975)drops[i]=0;else drops[i]++;
+    });
+  },50);
+}
+</script>
+</body>
+</html>
